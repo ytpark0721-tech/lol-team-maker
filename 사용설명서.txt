@@ -4,6 +4,8 @@
 
 ■ 최초 설치 (클론 후 1회만)
 ----------------------------------------
+
+[ Linux / Mac ]
 1. 터미널 열기
 2. 아래 명령어 실행:
 
@@ -11,12 +13,30 @@
    cd lol-team-maker
    bash setup.sh
 
-   → Python 패키지, Node 패키지, cloudflared 자동 설치됨
+   → Python3, Node.js, 패키지, cloudflared 자동 설치됨
+
+
+[ Windows ]
+1. git 설치 (없는 경우): https://git-scm.com/download/win
+2. 아무 폴더에서 우클릭 → "Git Bash Here" 또는 PowerShell 열기
+3. 아래 명령어 실행:
+
+   git clone https://github.com/ytpark0721-tech/lol-team-maker.git
+
+4. 탐색기에서 lol-team-maker 폴더 열기
+5. setup.bat 더블클릭 → Python3, Node.js, 패키지 자동 설치
+   (설치 중 터미널 재시작 요청 시 재시작 후 다시 setup.bat 실행)
 
 
 ■ 앱 실행
 ----------------------------------------
+
+[ Linux / Mac ]
    bash start.sh
+
+[ Windows ]
+   start.bat 더블클릭
+   → 백엔드/프론트엔드 창이 각각 열리며 자동 실행됨
 
    실행 후 터미널에 접속 주소가 출력됨:
    - 본인:        http://localhost:5174
