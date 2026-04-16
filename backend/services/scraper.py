@@ -121,17 +121,18 @@ def _scrape_opgg(summoner_name: str) -> dict:
 
     if desc_match:
         desc = desc_match.group(1)
-        # 티어 추출
-        tier_match = re.search(
-            r'/\s*(Challenger|Grandmaster|Master|Diamond|Emerald|Platinum|Gold|Silver|Bronze|Iron)',
-            desc, re.IGNORECASE
-        )
-        if tier_match:
-            tier = tier_match.group(1).upper()
-
         # 챔피언 추출: "Aurora - 18Win..."
         champs = re.findall(r"([A-Za-z][A-Za-z\s'\.&!]+?)\s*-\s*\d+Win", desc)
         champ_names = [c.strip() for c in champs if c.strip() and len(c.strip()) > 1]
+
+    # 역대 최고 티어: 시즌 기록 테이블에서 파싱
+    season_tiers = re.findall(r'first-letter:uppercase">([a-z]+)</span>', html)
+    if season_tiers:
+        def tier_rank(t: str) -> int:
+            return TIER_ORDER.index(t.upper()) if t.upper() in TIER_ORDER else -1
+        best = max(season_tiers, key=tier_rank)
+        if best.upper() in TIER_ORDER:
+            tier = best.upper()
 
     main_lane = _infer_lane_from_champions(champ_names)
     champion_pool = len(champ_names)
