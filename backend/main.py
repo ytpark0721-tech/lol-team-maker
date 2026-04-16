@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from database import init_db
-from routers import players, teams
+from routers import players, teams, matches
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,6 +20,7 @@ app.add_middleware(
 
 app.include_router(players.router)
 app.include_router(teams.router)
+app.include_router(matches.router)
 
 @app.get("/")
 async def root():

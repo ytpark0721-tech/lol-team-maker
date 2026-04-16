@@ -61,6 +61,12 @@ CHAMPION_LANE: dict[str, str] = {
 
 TIER_ORDER = ["IRON","BRONZE","SILVER","GOLD","PLATINUM","EMERALD","DIAMOND","MASTER","GRANDMASTER","CHALLENGER"]
 
+# 챔피언명 정규화 (공백·특수문자 제거) → URL 포맷과 매칭
+def _norm(name: str) -> str:
+    return re.sub(r"[^A-Za-z]", "", name).lower()
+
+CHAMPION_LANE_NORM: dict[str, str] = {_norm(k): v for k, v in CHAMPION_LANE.items()}
+
 
 def _curl_get(url: str) -> str:
     result = subprocess.run(
@@ -74,10 +80,10 @@ def _curl_get(url: str) -> str:
 
 
 def _infer_lane_from_champions(champ_names: list[str]) -> str | None:
-    """상위 챔피언 목록에서 주 라인 추론"""
+    """상위 챔피언 목록에서 주 라인 추론 (URL 포맷 정규화 후 매칭)"""
     lane_votes: dict[str, int] = {}
     for i, champ in enumerate(champ_names):
-        lane = CHAMPION_LANE.get(champ)
+        lane = CHAMPION_LANE_NORM.get(_norm(champ))
         if lane:
             weight = len(champ_names) - i  # 상위 챔피언에 가중치
             lane_votes[lane] = lane_votes.get(lane, 0) + weight
@@ -114,19 +120,21 @@ def _scrape_opgg(summoner_name: str) -> dict:
     champ_names: list[str] = []
     tier = "UNRANKED"
 
-    # 챔피언 추출: meta description의 "ChampName - NWin" 패턴
-    desc_match = re.search(r'<meta name="description" content="([^"]+)"', html)
-    if desc_match:
-        desc = desc_match.group(1)
-        champs = re.findall(r"([A-Za-z][A-Za-z\s'\.&!]+?)\s*-\s*\d+Win", desc)
-        champ_names = [c.strip() for c in champs if c.strip() and len(c.strip()) > 1]
+    # 챔피언 추출: op.gg CDN 이미지 URL에서 챔피언명 파싱
+    # 형식: akamaized.net/meta/images/lol/{ver}/champion/Maokai.png
+    all_champs = re.findall(
+        r'akamaized\.net/meta/images/lol/[^/]+/champion/([A-Za-z0-9]+)\.png', html
+    )
+    # 순서 유지하며 중복 제거
+    seen: set[str] = set()
+    for c in all_champs:
+        if c not in seen:
+            seen.add(c)
+            champ_names.append(c)
 
-    # 역대 최고 티어: 시즌 기록 테이블 파싱
-    # <span class="... first-letter:uppercase">gold</span> 형태
-    season_tiers = re.findall(r'first-letter:uppercase[^"]*">([a-z]+)</span>', html)
-    if not season_tiers:
-        # 대체 패턴
-        season_tiers = re.findall(r'first-letter:uppercase">([a-z]+)</span>', html)
+    # 역대 최고 티어: "first-letter:uppercase">gold 1</span> 형태
+    # 티어명만 추출 (뒤의 숫자 제거)
+    season_tiers = re.findall(r'first-letter:uppercase[^"]*">([a-z]+)', html)
 
     if season_tiers:
         valid = [t for t in season_tiers if t.upper() in TIER_ORDER]
@@ -135,7 +143,6 @@ def _scrape_opgg(summoner_name: str) -> dict:
             tier = best.upper()
 
     main_lane = _infer_lane_from_champions(champ_names)
-    champion_pool = len(champ_names)
 
     return {
         "summoner_name": summoner_name,

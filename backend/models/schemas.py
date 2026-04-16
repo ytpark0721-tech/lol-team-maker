@@ -41,3 +41,37 @@ class TeamResult(BaseModel):
     team1_total: int
     team2_total: int
     diff: int
+
+# 경기 기록
+class MatchRecord(BaseModel):
+    team1: list[TeamPlayer]
+    team2: list[TeamPlayer]
+    team1_total: int
+    team2_total: int
+    winner: int   # 1 or 2
+    notes: Optional[str] = ""
+
+class MatchPlayerStat(BaseModel):
+    summoner_name: str
+    team: int
+    lane: str
+    value: int
+    won: int
+
+class Match(BaseModel):
+    id: int
+    played_at: str
+    winner: int
+    team1_value: int
+    team2_value: int
+    notes: str
+    players: list[MatchPlayerStat]
+
+class PlayerStat(BaseModel):
+    summoner_name: str
+    games: int
+    wins: int
+    losses: int
+    win_rate: float
+    avg_value: float
+    most_lane: Optional[str]
