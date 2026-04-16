@@ -7,7 +7,7 @@ class PlayerCreate(BaseModel):
     summoner_name: str
     main_lane: Optional[str] = None
     sub_lane: Optional[str] = None
-    champion_pool: Optional[int] = 0
+    champions: Optional[str] = ""
     tier: Optional[str] = "UNRANKED"
     value: int = 5
 
@@ -21,7 +21,7 @@ class Player(BaseModel):
     summoner_name: str
     main_lane: Optional[str]
     sub_lane: Optional[str]
-    champion_pool: int
+    champions: str
     tier: str
     value: int
 

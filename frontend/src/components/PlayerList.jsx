@@ -6,8 +6,6 @@ const LANE_LABEL = { top: '탑', jungle: '정글', mid: '미드', bot: '원딜',
 const LANE_ICON = { top: '🛡️', jungle: '🌲', mid: '⚡', bot: '🏹', support: '💊' }
 
 export default function PlayerList({ players, onUpdate, onDelete }) {
-  const [editing, setEditing] = useState({})
-
   const handleValueChange = async (player, value) => {
     await axios.patch(`/api/players/${player.id}`, { value: parseInt(value) })
     onUpdate()
@@ -31,8 +29,8 @@ export default function PlayerList({ players, onUpdate, onDelete }) {
           <tr>
             <th>소환사명</th>
             <th>주 라인</th>
-            <th>챔피언 폭</th>
-            <th>티어</th>
+            <th>모스트 챔피언</th>
+            <th>최고 티어</th>
             <th>몸값</th>
             <th></th>
           </tr>
@@ -54,7 +52,9 @@ export default function PlayerList({ players, onUpdate, onDelete }) {
                   ))}
                 </select>
               </td>
-              <td>{p.champion_pool > 0 ? `${p.champion_pool}개` : '-'}</td>
+              <td className="champions">
+                {p.champions ? p.champions : '-'}
+              </td>
               <td>{p.tier}</td>
               <td>
                 <div className="value-control">

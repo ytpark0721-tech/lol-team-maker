@@ -10,7 +10,7 @@ async def init_db():
                 summoner_name TEXT NOT NULL,
                 main_lane TEXT,
                 sub_lane TEXT,
-                champion_pool INTEGER DEFAULT 0,
+                champions TEXT DEFAULT '',
                 tier TEXT DEFAULT 'UNRANKED',
                 value INTEGER DEFAULT 5,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

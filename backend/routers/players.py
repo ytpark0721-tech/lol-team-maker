@@ -24,10 +24,10 @@ async def add_player_by_scrape(summoner_name: str):
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
-            """INSERT INTO players (summoner_name, main_lane, sub_lane, champion_pool, tier, value)
+            """INSERT INTO players (summoner_name, main_lane, sub_lane, champions, tier, value)
                VALUES (?, ?, ?, ?, ?, 5)""",
             (info["summoner_name"], info["main_lane"], info["sub_lane"],
-             info["champion_pool"], info["tier"])
+             info["champions"], info["tier"])
         )
         await db.commit()
         row = await (await db.execute(
@@ -42,10 +42,10 @@ async def add_player(data: PlayerCreate):
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
-            """INSERT INTO players (summoner_name, main_lane, sub_lane, champion_pool, tier, value)
+            """INSERT INTO players (summoner_name, main_lane, sub_lane, champions, tier, value)
                VALUES (?, ?, ?, ?, ?, ?)""",
             (data.summoner_name, data.main_lane, data.sub_lane,
-             data.champion_pool, data.tier, data.value)
+             data.champions, data.tier, data.value)
         )
         await db.commit()
         row = await (await db.execute(

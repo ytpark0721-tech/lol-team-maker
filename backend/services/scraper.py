@@ -1,5 +1,6 @@
 import subprocess
 import re
+from urllib.parse import quote
 
 # 챔피언 → 주 라인 매핑
 CHAMPION_LANE: dict[str, str] = {
@@ -95,43 +96,42 @@ async def scrape_summoner(summoner_name: str) -> dict:
         "summoner_name": summoner_name,
         "main_lane": None,
         "sub_lane": None,
-        "champion_pool": 0,
+        "champions": "",
         "tier": "UNRANKED",
     }
 
 
 def _scrape_opgg(summoner_name: str) -> dict:
-    # 소환사명에 태그 없으면 -KR1 추가 시도
-    name = summoner_name.strip()
-    url = f"https://op.gg/lol/summoners/kr/{name.replace(' ', '%20')}"
+    # # → - 변환 후 한글 포함 전체 URL 인코딩
+    name = summoner_name.strip().replace('#', '-')
+    encoded = quote(name, safe='-')
+    url = f"https://op.gg/lol/summoners/kr/{encoded}"
     html = _curl_get(url)
 
     if len(html) < 1000:
         raise ValueError("페이지 로드 실패")
 
-    # 메타 description에서 티어 + 챔피언 파싱
-    # 예: "Hide on bush#KR1 / Challenger 1 1799LP / 187Win 136Lose Win rate 58% / Aurora - 18Win 13Lose..."
-    desc_match = re.search(
-        r'name.*?description.*?content.*?"([^"]{30,})"',
-        html
-    )
-
-    tier = "UNRANKED"
     champ_names: list[str] = []
+    tier = "UNRANKED"
 
+    # 챔피언 추출: meta description의 "ChampName - NWin" 패턴
+    desc_match = re.search(r'<meta name="description" content="([^"]+)"', html)
     if desc_match:
         desc = desc_match.group(1)
-        # 챔피언 추출: "Aurora - 18Win..."
         champs = re.findall(r"([A-Za-z][A-Za-z\s'\.&!]+?)\s*-\s*\d+Win", desc)
         champ_names = [c.strip() for c in champs if c.strip() and len(c.strip()) > 1]
 
-    # 역대 최고 티어: 시즌 기록 테이블에서 파싱
-    season_tiers = re.findall(r'first-letter:uppercase">([a-z]+)</span>', html)
+    # 역대 최고 티어: 시즌 기록 테이블 파싱
+    # <span class="... first-letter:uppercase">gold</span> 형태
+    season_tiers = re.findall(r'first-letter:uppercase[^"]*">([a-z]+)</span>', html)
+    if not season_tiers:
+        # 대체 패턴
+        season_tiers = re.findall(r'first-letter:uppercase">([a-z]+)</span>', html)
+
     if season_tiers:
-        def tier_rank(t: str) -> int:
-            return TIER_ORDER.index(t.upper()) if t.upper() in TIER_ORDER else -1
-        best = max(season_tiers, key=tier_rank)
-        if best.upper() in TIER_ORDER:
+        valid = [t for t in season_tiers if t.upper() in TIER_ORDER]
+        if valid:
+            best = max(valid, key=lambda t: TIER_ORDER.index(t.upper()))
             tier = best.upper()
 
     main_lane = _infer_lane_from_champions(champ_names)
@@ -141,6 +141,6 @@ def _scrape_opgg(summoner_name: str) -> dict:
         "summoner_name": summoner_name,
         "main_lane": main_lane,
         "sub_lane": None,
-        "champion_pool": champion_pool,
+        "champions": ", ".join(champ_names[:5]),
         "tier": tier,
     }

@@ -207,6 +207,12 @@ select {
   padding-top: 60px;
 }
 
+.champions {
+  font-size: 0.8rem;
+  color: #a89060;
+  max-width: 200px;
+}
+
 .value-badge {
   background: #c89b3c;
   color: #0a0e1a;
