@@ -63,15 +63,45 @@ lol-team-maker/
 ## 시작하기
 
 ```bash
-# 백엔드
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-
-# 프론트엔드
-cd frontend
-npm install
-npm run dev
+bash start.sh
 ```
 
-`http://localhost:5173` 접속
+- 본인: `http://localhost:5174`
+- 같은 WiFi 내 다른 PC: `http://<내 IP>:5174`
+
+## 외부 인터넷에서 접속 (Cloudflare Tunnel)
+
+같은 WiFi가 아닌 환경에서도 접속하려면 Cloudflare Tunnel을 사용합니다.
+포트 포워딩 없이 공개 URL이 생성됩니다.
+
+### 1. cloudflared 설치 (최초 1회)
+
+```bash
+# Ubuntu/Debian
+wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared-linux-amd64.deb
+rm cloudflared-linux-amd64.deb
+```
+
+### 2. 앱 실행 후 터널 열기
+
+```bash
+# 터미널 1: 앱 실행
+bash start.sh
+
+# 터미널 2: 터널 생성
+cloudflared tunnel --url http://localhost:5174
+```
+
+### 3. 공개 URL 공유
+
+터미널에 아래와 같은 URL이 출력됩니다:
+
+```
+https://xxxx-xxxx-xxxx.trycloudflare.com
+```
+
+이 URL을 내전 참가자들에게 공유하면 어디서든 접속 가능합니다.
+
+> 터널은 `cloudflared` 프로세스가 실행 중인 동안만 유지됩니다.
+> 무료로 사용 가능하며 별도 계정 불필요합니다.
