@@ -3,7 +3,7 @@
 ## 프로젝트 개요
 
 **LOL 내전 팀 자동 밸런싱 웹 앱**입니다.
-10명의 소환사명을 입력하면 op.gg에서 주 라인과 챔피언 폭을 자동 조회하고,
+10명의 소환사명을 입력하면 op.gg에서 모스트 챔피언 5개와 역대 최고 티어를 자동 조회하고,
 내전 멤버들이 직접 입력한 몸값(1~10)을 기반으로 라인 포지션과 몸값이 균형 잡힌 두 팀을 자동 구성합니다.
 
 ---
@@ -22,7 +22,7 @@ lol-team-maker/
 │   │   ├── players.py          # 참가자 CRUD + op.gg 조회
 │   │   └── teams.py            # 팀 자동 배정
 │   └── services/
-│       ├── scraper.py          # op.gg 스크래핑
+│       ├── scraper.py          # op.gg 스크래핑 (curl 기반)
 │       └── balancer.py         # 팀 밸런싱 알고리즘
 ├── frontend/                   # React + Vite 프론트엔드
 │   └── src/
@@ -34,6 +34,7 @@ lol-team-maker/
 │           └── TeamResult.jsx   # 팀 결과 출력
 ├── setup.sh                    # 최초 설치 스크립트
 ├── start.sh                    # 실행 스크립트
+├── 사용설명서.txt
 └── CLAUDE.md
 ```
 
@@ -41,10 +42,23 @@ lol-team-maker/
 
 ## 기술 스택
 
-- **Backend**: FastAPI, aiosqlite, httpx, BeautifulSoup4
+- **Backend**: FastAPI, aiosqlite, BeautifulSoup4
 - **Frontend**: React, Vite, axios
 - **DB**: SQLite (`backend/lol.db`, gitignore됨)
 - **포트**: 백엔드 8001, 프론트엔드 5174
+
+---
+
+## op.gg 스크래핑 방식
+
+`backend/services/scraper.py`
+
+op.gg가 클라이언트 사이드 렌더링으로 변경되어 curl + HTML 파싱 방식 사용:
+
+- **모스트 챔피언 5개**: `<meta name="description">` 태그에서 챔피언명 추출
+- **역대 최고 티어**: 시즌 기록 테이블 `first-letter:uppercase` 클래스 파싱 후 최고값 선택
+- **주 라인**: 챔피언→라인 매핑 딕셔너리로 추론
+- **소환사명 형식**: `닉네임#태그` 또는 `닉네임-태그` 모두 지원 (한글 포함 URL 인코딩 처리)
 
 ---
 
