@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+
 echo ""
 echo "====================================="
 echo "  LOL Team Maker - 초기 설치"
@@ -8,14 +10,14 @@ echo "====================================="
 
 # Python venv
 echo "[1/3] 백엔드 패키지 설치..."
-cd "$(dirname "$0")/backend"
+cd "$ROOT/backend"
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt -q
 echo "  완료"
 
 # Node modules
 echo "[2/3] 프론트엔드 패키지 설치..."
-cd "$(dirname "$0")/frontend"
+cd "$ROOT/frontend"
 npm install --silent
 echo "  완료"
 
