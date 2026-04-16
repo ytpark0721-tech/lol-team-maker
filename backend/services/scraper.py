@@ -1,5 +1,6 @@
 import subprocess
 import re
+import httpx
 from urllib.parse import quote
 
 # 챔피언 → 주 라인 매핑
@@ -68,12 +69,27 @@ def _norm(name: str) -> str:
 CHAMPION_LANE_NORM: dict[str, str] = {_norm(k): v for k, v in CHAMPION_LANE.items()}
 
 
-def _curl_get(url: str) -> str:
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "Accept-Language": "ko-KR,ko;q=0.9",
+}
+
+def _fetch(url: str) -> str:
+    """httpx 먼저 시도 → 실패 시 curl subprocess 폴백 (크로스플랫폼)"""
+    try:
+        with httpx.Client(headers=HEADERS, follow_redirects=True, timeout=15) as client:
+            resp = client.get(url)
+            if len(resp.text) > 1000:
+                return resp.text
+    except Exception:
+        pass
+
+    # curl 폴백
     result = subprocess.run(
         ["curl", "-sL", url,
-         "-H", "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-         "-H", "Accept-Language: ko-KR,ko;q=0.9",
-         "--max-time", "10"],
+         "-H", f"User-Agent: {HEADERS['User-Agent']}",
+         "-H", f"Accept-Language: {HEADERS['Accept-Language']}",
+         "--max-time", "15"],
         capture_output=True, text=True
     )
     return result.stdout
@@ -112,7 +128,7 @@ def _scrape_opgg(summoner_name: str) -> dict:
     name = summoner_name.strip().replace('#', '-')
     encoded = quote(name, safe='-')
     url = f"https://op.gg/lol/summoners/kr/{encoded}"
-    html = _curl_get(url)
+    html = _fetch(url)
 
     if len(html) < 1000:
         raise ValueError("페이지 로드 실패")
